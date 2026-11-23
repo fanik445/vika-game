@@ -1,0 +1,81 @@
+import telebot
+from telebot import types
+import random
+
+# ВСТАВЬТЕ СЮДА ВАШ ТОКЕН!
+TOKEN = '9286668632:AAEYpDtWE8VC_rHnbK4ep7xt9M2yDuPyp-A' 
+bot = telebot.TeleBot(TOKEN)
+
+# Хранилище очков (в памяти)
+scores = {}
+
+# Фразы Вики
+reactions = [
+    "Ай! 😡", "Ты чего дерешься?! 😭", "Прекрати! 😤", "Мне больно! 🤕",
+    "Еще раз и получишь! 🥊", "Хулиган! 😠", "Ну все, ты нарвался! 🤬",
+    "Я пожалуюсь маме! 😢", "Да что я тебе сделала?! 🥺", "Больно же! 🤬"
+]
+
+def get_kick_keyboard():
+    """Создает кнопку для пинания"""
+    keyboard = types.InlineKeyboardMarkup()
+    btn = types.InlineKeyboardButton(text="👟 Пнуть Вику", callback_data="kick")
+    keyboard.add(btn)
+    return keyboard
+
+# Обработка команды /start
+@bot.message_handler(commands=['start'])
+def start(message):
+    user_id = message.from_user.id
+    scores[user_id] = 0
+    text = (
+        "Привет! Это игра «Пни Вику»! 😈\n\n"
+        "Твоя задача — пинать Вику как можно больше раз. "
+        "Жми на кнопку внизу!\n\n"
+        "Твои очки: 0"
+    )
+    bot.send_message(message.chat.id, text, reply_markup=get_kick_keyboard())
+
+# Обработка нажатия на кнопку "Пнуть Вику"
+@bot.callback_query_handler(func=lambda call: call.data == "kick")
+def handle_kick(call):
+    user_id = call.from_user.id
+    
+    # Начисляем очко
+    if user_id not in scores:
+        scores[user_id] = 0
+    scores[user_id] += 1
+    current_score = scores[user_id]
+    
+    # Выбираем случайную фразу
+    reaction = random.choice(reactions)
+    
+    # Формируем текст
+    text = (
+        f"{reaction}\n\n"
+        f"💥 Ты пнул Вику!\n"
+        f"👟 Всего пинков: *{current_score}*"
+    )
+    
+    # Обновляем сообщение (меняем текст и оставляем кнопку)
+    try:
+        bot.edit_message_text(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            text=text,
+            reply_markup=get_kick_keyboard(),
+            parse_mode='Markdown'
+        )
+    except Exception:
+        pass
+    
+    # Обязательно отвечаем на callback, чтобы убрать "часики" на кнопке
+    bot.answer_callback_query(call.id)
+
+# Если напишут что-то другое
+@bot.message_handler(func=lambda message: True)
+def other_messages(message):
+    bot.reply_to(message, "Жми на кнопку ниже, чтобы пинать Вику! 👇", reply_markup=get_kick_keyboard())
+
+print("Игра 'Пни Вику' запущена!")
+bot.infinity_polling()
