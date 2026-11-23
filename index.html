@@ -1,81 +1,81 @@
-import telebot
-from telebot import types
-import random
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пни Вику</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px 20px;
+            background-color: #1a1a2e;
+            color: white;
+            transition: background-color 0.3s;
+            margin: 0;
+        }
+        h1 { font-size: 28px; }
+        #score {
+            font-size: 72px;
+            font-weight: bold;
+            color: #e94560;
+            margin: 20px 0;
+        }
+        button {
+            font-size: 24px;
+            padding: 20px 60px;
+            border: none;
+            border-radius: 50px;
+            background-color: #e94560;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        #message {
+            margin-top: 30px;
+            font-size: 20px;
+            color: #ffd700;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>😈 Пни Вику!</h1>
+    <div id="score">0</div>
+    <button id="kickBtn">👟 Пнуть</button>
+    <div id="message"></div>
 
-# ВСТАВЬТЕ СЮДА ВАШ ТОКЕН!
-TOKEN = '9286668632:AAEYpDtWE8VC_rHnbK4ep7xt9M2yDuPyp-A' 
-bot = telebot.TeleBot(TOKEN)
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
 
-# Хранилище очков (в памяти)
-scores = {}
+        let score = 0;
+        const phrases = [
+            "Ай! 😡", "Ты чего дерешься?! 😭", "Прекрати! 😤",
+            "Мне больно! 🤕", "Еще раз и получишь! 🥊",
+            "Хулиган! 😠", "Я пожалуюсь маме! 😢"
+        ];
+        const colors = ["#1a1a2e", "#16213e", "#0f3460", "#533483", "#2b2d42"];
 
-# Фразы Вики
-reactions = [
-    "Ай! 😡", "Ты чего дерешься?! 😭", "Прекрати! 😤", "Мне больно! 🤕",
-    "Еще раз и получишь! 🥊", "Хулиган! 😠", "Ну все, ты нарвался! 🤬",
-    "Я пожалуюсь маме! 😢", "Да что я тебе сделала?! 🥺", "Больно же! 🤬"
-]
+        const scoreEl = document.getElementById("score");
+        const messageEl = document.getElementById("message");
+        const btn = document.getElementById("kickBtn");
 
-def get_kick_keyboard():
-    """Создает кнопку для пинания"""
-    keyboard = types.InlineKeyboardMarkup()
-    btn = types.InlineKeyboardButton(text="👟 Пнуть Вику", callback_data="kick")
-    keyboard.add(btn)
-    return keyboard
-
-# Обработка команды /start
-@bot.message_handler(commands=['start'])
-def start(message):
-    user_id = message.from_user.id
-    scores[user_id] = 0
-    text = (
-        "Привет! Это игра «Пни Вику»! 😈\n\n"
-        "Твоя задача — пинать Вику как можно больше раз. "
-        "Жми на кнопку внизу!\n\n"
-        "Твои очки: 0"
-    )
-    bot.send_message(message.chat.id, text, reply_markup=get_kick_keyboard())
-
-# Обработка нажатия на кнопку "Пнуть Вику"
-@bot.callback_query_handler(func=lambda call: call.data == "kick")
-def handle_kick(call):
-    user_id = call.from_user.id
-    
-    # Начисляем очко
-    if user_id not in scores:
-        scores[user_id] = 0
-    scores[user_id] += 1
-    current_score = scores[user_id]
-    
-    # Выбираем случайную фразу
-    reaction = random.choice(reactions)
-    
-    # Формируем текст
-    text = (
-        f"{reaction}\n\n"
-        f"💥 Ты пнул Вику!\n"
-        f"👟 Всего пинков: *{current_score}*"
-    )
-    
-    # Обновляем сообщение (меняем текст и оставляем кнопку)
-    try:
-        bot.edit_message_text(
-            chat_id=call.message.chat.id,
-            message_id=call.message.message_id,
-            text=text,
-            reply_markup=get_kick_keyboard(),
-            parse_mode='Markdown'
-        )
-    except Exception:
-        pass
-    
-    # Обязательно отвечаем на callback, чтобы убрать "часики" на кнопке
-    bot.answer_callback_query(call.id)
-
-# Если напишут что-то другое
-@bot.message_handler(func=lambda message: True)
-def other_messages(message):
-    bot.reply_to(message, "Жми на кнопку ниже, чтобы пинать Вику! 👇", reply_markup=get_kick_keyboard())
-
-print("Игра 'Пни Вику' запущена!")
-bot.infinity_polling()
+        btn.addEventListener("click", () => {
+            score++;
+            scoreEl.textContent = score;
+            const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+            messageEl.textContent = phrase;
+            document.body.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        });
+    </script>
+</body>
+</html>
